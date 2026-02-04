@@ -8,7 +8,7 @@
 
 **Category** — HTTP Request Smuggling<p align="center"></i></p>
 <br>
-**PortSwigger Link** — https://portswigger.net/web-security/request-smuggling/lab-basic-te-cl<p align="center"></i></p>
+**PortSwigger Link** — [https://portswigger.net/web-security/request-smuggling/lab-basic-te-cl](https://portswigger.net/web-security/request-smuggling/lab-basic-cl-te)<p align="center"></i></p>
 <br>
 **Completed** — February 3 2026<p align="center"></i></p>
 <br>
