@@ -9,6 +9,7 @@
 **Completed** — February 3 2026
 **Tools** — Burp Repeater (Update Content-Length unchecked), Burp Intruder (for
 confirmation)
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -43,14 +44,22 @@ That shift—from 'how do I bypass a filter?' to 'how do I desynchronize the str
 
 I was poking around the homepage and wanted a faster way to spot desync points, so I fired up the HTTP Request Smuggler extension. I wasn't just looking for bugs I was looking for timing offsets where the server hung just a second too long, signaling a protocol-level disagreement.
 Once the extension flagged a CL.TE discrepancy, I moved the request over to Repeater to prove it wasn't a false positive:
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
+<img width="1363" height="686" alt="image" src="https://github.com/user-attachments/assets/99d9b489-224d-4e39-8130-d11cbdeac3d2" />
+
+<img width="1031" height="417" alt="image" src="https://github.com/user-attachments/assets/c31b17ef-09b2-4ad9-ae5e-152c3239f586" />
+
+<img width="1083" height="707" alt="image" src="https://github.com/user-attachments/assets/969e9bbe-4664-4c6b-9a2a-168e30941808" />
+<p align="center"></i></p>
+<br><br>
+
 
 While testing in Repeater, I was trying to trigger a desync but kept hitting a wall. I realized I was still sending the request over HTTP/2, which handles request boundaries much more strictly than its predecessor. For a CL.TE attack to actually work in this environment, I had to force the connection back to HTTP/1.1.
 Once I toggled the protocol and re-aligned my Content-Length and Transfer-Encoding headers, the attack clicked. Debugging that 'invisible' protocol mismatch was a great reminder that smuggling isn't just about the payload—it's about the specific way the front-end and back-end talk to each other.
-![alt text](image-3.png)
-![alt text](image-4.png)
+<img width="1360" height="685" alt="image" src="https://github.com/user-attachments/assets/bea8b3ea-11c3-4b11-baa3-5531b99e820e" />
+
+<img width="1361" height="686" alt="image" src="https://github.com/user-attachments/assets/bf442804-c5dc-424a-bc8b-a3f18e4f9a7e" />
+<p align="center"></i></p>
+<br><br>
 
 Using Burp Repeater, I issued a dual-identity payload:
 
@@ -76,13 +85,20 @@ The back-end server is configured to prioritize Transfer-Encoding: chunked.
 
     Request A (Termination): It starts reading the body and immediately sees the 0\r\n\r\n. In chunked encoding, this is the EOF (End-of-File). It processes the POST request as having an empty body and finishes.
     The "Leftovers": The back-end stops parsing at the 0, but the remaining bytes—GET /404 HTTP/1.1 don't disappear. They are left stranded in the TCP buffer.
+<p align="center"></i></p>
+<br>
 
 By issuing the request twice, I essentially acted as both the attacker and the victim to prove the desync. The first request felt like a normal
 200 OK, but it was secretly "priming" the back-end's TCP buffer with my smuggled GET /404 prefix.
 When I sent the second request, the back-end reached into its buffer, grabbed those leftover bytes, and tacked them onto the start of my new request. Instead of seeing the POST I just sent, the server processed the smuggled command first, resulting in a 404 Not Found. Receiving that error on a perfectly valid POST request was the definitive proof that the request queue was poisoned.:
-![alt text](image-5.png)
-![alt text](image-6.png)
-![alt text](image-7.png)
+<img width="1361" height="686" alt="image" src="https://github.com/user-attachments/assets/9ebb4263-ea5f-41da-b364-fac6a82b5c66" />
+
+<img width="1028" height="688" alt="image" src="https://github.com/user-attachments/assets/43e165a4-7554-4d3a-8ef8-9ab1cb3d2207" />
+
+<img width="1349" height="685" alt="image" src="https://github.com/user-attachments/assets/a82aa951-2861-4ef9-8b15-9732b007bee3" />
+<p align="center"></i></p>
+<br><br>
+
 
 # Impact
 
