@@ -3,12 +3,18 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security Research](https://img.shields.io/badge/Security-Research-blue.svg)](https://github.com/yourusername/web-shell-race-condition)
 
-**Level** — Practitioner
-**Category** — HTTP Request Smuggling
-**PortSwigger Link** — https://portswigger.net/web-security/request-smuggling/lab-basic-te-cl
-**Completed** — February 3 2026
-**Tools** — Burp Repeater (Update Content-Length unchecked), Burp Intruder (for
-confirmation)
+***Level** — Practitioner<p align="center"></i></p>
+<br>
+
+**Category** — HTTP Request Smuggling<p align="center"></i></p>
+<br>
+**PortSwigger Link** — [https://portswigger.net/web-security/request-smuggling/lab-basic-cl-te](https://portswigger.net/web-security/request-smuggling/lab-basic-te-cl)<p align="center"></i></p>
+<br>
+**Completed** — February 6 2026<p align="center"></i></p>
+<br>
+**Tools** — Burp Repeater (Update Content-Length unchecked), HTTP Smuggler extention (for
+confirmation)<p align="center"></i></p>
+<br>
 
 # Table of Contents
 
