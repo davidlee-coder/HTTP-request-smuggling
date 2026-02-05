@@ -44,7 +44,7 @@ I was poking around the homepage and wanted a faster way to spot desync points, 
 <br><br>
 
 
-During the verification phase in Burp Repeater, I encountered a 400 Bad Request. This was a pivotal moment where I realized that Request Smuggling is a game of byte-perfect alignment.
+During the verification phase in Burp Repeater, I encountered a 400 Bad Request indicated in the third screenshot. This was a pivotal moment where I realized that Request Smuggling is a game of byte-perfect alignment.
 In a TE.CL attack, the Transfer-Encoding chunk size (in hex) must account for every character of the smuggled request, including the trailing \r\n. If the hex value is 1e (30 bytes), but the smuggled body is 31 bytes, the front-end parser desynchronizes from the payload itself, leading to an 'Invalid Request' error. 
 3\n\r
 GET /DAVID HTTP/1.1 \n\r 
