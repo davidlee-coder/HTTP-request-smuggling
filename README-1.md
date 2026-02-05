@@ -40,6 +40,8 @@ I was poking around the homepage and wanted a faster way to spot desync points, 
  <img width="1030" height="485" alt="image" src="https://github.com/user-attachments/assets/2f6d5598-4e9f-4ce8-9810-a3f0545d685f" />
 
 <img width="1083" height="658" alt="image" src="https://github.com/user-attachments/assets/9e5fd536-865f-4e71-95c1-b1b08910ae39" />
+<p align="center"></i></p>
+<br><br>
 
 
 During the verification phase in Burp Repeater, I encountered a 400 Bad Request. This was a pivotal moment where I realized that Request Smuggling is a game of byte-perfect alignment.
@@ -49,7 +51,11 @@ GET /DAVID HTTP/1.1 \n\r
 X=Y\n\r
 0\n\r
 \n\r
+<img width="1366" height="682" alt="image" src="https://github.com/user-attachments/assets/f5311599-46ba-40bd-b130-69a23741c0ac" />
+<img width="1366" height="685" alt="image" src="https://github.com/user-attachments/assets/5130d929-cb0a-4b3c-806b-8ec1d5a4d24c" />
 <img width="1358" height="660" alt="image" src="https://github.com/user-attachments/assets/8e1e171b-ec24-495a-ba77-c9986adf216a" />
+<p align="center"></i></p>
+<br><br>
 
 Next, I resolved this by using the 'Hex Editor' tab in Burp inspector panel to ensure the byte count matched the hex chunk header exactly:
 
@@ -59,6 +65,8 @@ X=Y\n\r
 0\n\r
 \n\r
 <img width="1030" height="659" alt="image" src="https://github.com/user-attachments/assets/380d349a-62a8-4ea8-a0ef-031b4ada2817" />
+<p align="center"></i></p>
+<br><br>
 
 Initially, my attack appeared successful at the protocol level (returning 200 OK), but I wasn't seeing the 'smuggled' behavior (e.g., a 404 or session hijacking). I realized that while I had successfully desynchronized the servers, I hadn't prepared the payload for the back-end application logic.
 To 'swallow' a victim's request, I had to ensure two things:
@@ -66,12 +74,16 @@ To 'swallow' a victim's request, I had to ensure two things:
     Content-Type: application/x-www-form-urlencoded: This tells the back-end to treat the smuggled body as a series of parameters.
     Content-Length (Smuggled): 20: By setting a length larger than the actual smuggled body, I forced the back-end to 'hang' and wait for more data. When the victim's request arrived on the same connection, the back-end appended their headers to my smuggled parameter, effectively capturing their data and returning the response meant for my smuggled request to them: 
 <img width="1027" height="697" alt="image" src="https://github.com/user-attachments/assets/4453850e-608e-4fcd-8bda-483bc6ed066c" />
+<p align="center"></i></p>
+<br><br>
 
 To confirm the exploit, I executed a back-to-back request sequence. I sent the initial 'attack' request to poison the back-end socket buffer, immediately followed by a standard, legitimate POST request.
 The result was a 404 Not Found response for the second request. Since the second request was targeting a valid path, receiving a 404 proved that the back-end had prepended my smuggled GET /DAVID (which does not exist) to the start of the legitimate request. This confirmed a successful socket poisoning and demonstrated how an attacker can hijack the execution context of any user sharing the same connection pool:
 <img width="1030" height="659" alt="image" src="https://github.com/user-attachments/assets/e29dfdf3-693a-4f6c-8ef1-a87f8df07746" />
 
 <img width="1027" height="697" alt="image" src="https://github.com/user-attachments/assets/4d85e75c-73eb-4752-84f5-f47ba0ee5eaf" />
+<p align="center"></i></p>
+<br><br>
 
 
 
