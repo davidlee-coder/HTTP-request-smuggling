@@ -1,6 +1,6 @@
 # HTTP Request Smuggling – Basic TE.CL Vulnerability
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security Research](https://img.shields.io/badge/Security-Research-blue.svg)](https://github.com/yourusername/web-shell-race-condition)
 
 **Level** — Practitioner<p align="center"></i></p>
