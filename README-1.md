@@ -64,7 +64,8 @@ GET /DAVID HTTP/1.1 \n\r
 X=Y\n\r
 0\n\r
 \n\r
-<img width="1030" height="659" alt="image" src="https://github.com/user-attachments/assets/380d349a-62a8-4ea8-a0ef-031b4ada2817" />
+<img width="1030" height="659" alt="image" src="https://github.com/user-attachments/assets/39b823d4-9ff4-462a-8fab-5b89ee6f50fe" />
+
 <p align="center"></i></p>
 <br><br>
 
