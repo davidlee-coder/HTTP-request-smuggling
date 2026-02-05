@@ -12,7 +12,7 @@
 <br>
 **Completed** — February 3 2026<p align="center"></i></p>
 <br>
-**Tools** — Burp Repeater (Update Content-Length unchecked), Burp Intruder (for
+**Tools** — Burp Repeater (Update Content-Length unchecked),HTTP Smuggler extention (for
 confirmation)<p align="center"></i></p>
 <br>
 
