@@ -12,7 +12,7 @@
 <br>
 **Completed** — February 6 2026<p align="center"></i></p>
 <br>
-**Tools** — Burp Repeater (Update Content-Length unchecked),HTTP Smuggler extention (for
+**Tools** — Burp Repeater (Update Content-Length unchecked), HTTP Smuggler extention (for
 confirmation), Documentation: [Flameshot](https://flameshot.org) (Screen capture & annotation)<p align="center"></i></p>
 <br>
 
