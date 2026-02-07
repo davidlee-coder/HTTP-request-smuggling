@@ -34,7 +34,7 @@ The breakthrough came when I realized the parsers weren’t just disagreeing on 
 
 # Exploitation
  
-I was poking around the homepage and wanted a faster way to spot desync points, so I fired up the HTTP Request Smuggler extension. I wasn't just looking for bugs I was looking for timing offsets where the server hung just a second too long, signaling a protocol-level disagreement. Once the extension flagged a TE.CL discrepancy, I moved the request over to Repeater to prove it wasn't a false positive:
+I was messing around the homepage and wanted a quik way to spot desync points, so I fired up the HTTP Request Smuggler extension. I wasn't just looking for bugs I was looking for timing offsets where the server hung just a second too long, indicating a protocol-level disagreement. Once the extension flagged a TE.CL discrepancy, I moved the request over to Repeater to prove it wasn't a false positive:
  <img width="1255" height="683" alt="image" src="https://github.com/user-attachments/assets/61858b11-1f52-4d7b-b48d-94defa982531" />
 
  <img width="1030" height="485" alt="image" src="https://github.com/user-attachments/assets/2f6d5598-4e9f-4ce8-9810-a3f0545d685f" />
@@ -44,7 +44,7 @@ I was poking around the homepage and wanted a faster way to spot desync points, 
 <br><br>
 
 
-During the verification phase in Burp Repeater, I encountered a 400 Bad Request indicated in the third screenshot. This was a pivotal moment where I realized that Request Smuggling is a game of byte-perfect alignment.
+During the verification phase in Burp Repeater, I encountered a 400 Bad Request indicated in the third screenshot. This was a pivotal moment where I realized that Request Smuggling is a game of byte-perfect alignment.To exploit a H2.TE vulnerability, you have to force the front-end and back-end to disagree. I had to ensure Burp Suite didn't 'fix' my payload. By unchecking 'Update Content-Length', I essentially took off the safety rails. This gave me full control over the raw byte stream, allowing me to smuggle a hidden GET request inside the body of a POST without the tool correcting my intentional 'errors' back to a valid state.
 In a TE.CL attack, the Transfer-Encoding chunk size (in hex) must account for every character of the smuggled request, including the trailing \r\n. If the hex value is 1e (30 bytes), but the smuggled body is 31 bytes, the front-end parser desynchronizes from the payload itself, leading to an 'Invalid Request' error. 
 3\n\r
 GET /DAVID HTTP/1.1 \n\r 
