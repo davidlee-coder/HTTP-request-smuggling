@@ -114,4 +114,5 @@ The result was a 404 Not Found response for the second request. Since the second
 
 - Connection Termination: Instead of reusing TCP connections (Keep-Alive) for multiple users, configure the proxy to use a fresh connection for each back-end request. While this impacts performance, it completely eliminates socket poisoning.
 
+
 **Happy (ethical) Hacking!**
