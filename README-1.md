@@ -13,7 +13,7 @@
 **Completed** — February 6 2026<p align="center"></i></p>
 <br>
 **Tools** — Burp Repeater (Update Content-Length unchecked),HTTP Smuggler extention (for
-confirmation)<p align="center"></i></p>
+confirmation), Documentation: [Flameshot](https://flameshot.org) (Screen capture & annotation)<p align="center"></i></p>
 <br>
 
 # Table of Contents
@@ -114,3 +114,4 @@ The result was a 404 Not Found response for the second request. Since the second
 
 - Connection Termination: Instead of reusing TCP connections (Keep-Alive) for multiple users, configure the proxy to use a fresh connection for each back-end request. While this impacts performance, it completely eliminates socket poisoning.
 
+**Happy (ethical) Hacking!**
