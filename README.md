@@ -128,3 +128,4 @@ The root cause is the "Logic Gap" between servers. To fix it, you have to close 
     
 - Use a WAF: Modern Web Application Firewalls (like AWS WAF or Cloudflare) have built-in protections to normalize or drop malformed "dual-length" requests before they hit your infrastructure.
 
+**Happy (ethical) Hacking!**
