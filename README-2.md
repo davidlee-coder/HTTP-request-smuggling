@@ -1,39 +1,24 @@
-﻿# HTTP/2 Request Smuggling – H2.TE Variant
-
+# HTTP/2 Request Smuggling – H2.TE Variant
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security Research](https://img.shields.io/badge/Security-Research-blue.svg)](https://github.com/yourusername/web-shell-race-condition)
 
 **Level** — Expert  
 **Category** — HTTP Request Smuggling / HTTP/2  
 **PortSwigger Link** — https://portswigger.net/web-security/request-smuggling/advanced/http2-request-smuggling  
-**Completed** — February 2026  
+**Completed** — February 8 2026  
 **Tools** — Burp Suite (with HTTP/2 support), HTTP Smuggler extension (for H2 testing)
 
 
-## Overview
+# Overview
 
-
-HTTP/2 request smuggling (specifically the **H2.TE** variant) exploits inconsistencies between how front-end servers (e.g., reverse proxies, load balancers) translate HTTP/2 frames into HTTP/1.1 for back-end servers. In H2.TE, the front-end converts HTTP/2 headers and body into HTTP/1.1 using **Transfer-Encoding: chunked**, while the back-end may interpret the request using **Content-Length** (or ignore chunked encoding entirely).  
-
-
-This allows an attacker to smuggle additional requests by crafting HTTP/2 messages with misleading length indicators — the front-end forwards the full H2 stream as one request, but the back-end sees extra content as a new request after the stated length.  
-
-
+HTTP/2 request smuggling (specifically the **H2.TE** variant) exploits inconsistencies between how front-end servers (e.g., reverse proxies, load balancers) translate HTTP/2 frames into HTTP/1.1 for back-end servers. In H2.TE, the front-end converts HTTP/2 headers and body into HTTP/1.1 using **Transfer-Encoding: chunked**, while the back-end may interpret the request using**Content-Length** (or ignore chunked encoding entirely). This allows an attacker to smuggle additional requests by crafting HTTP/2 messages with misleading length indicators — the front-end forwards the full H2 stream as one request, but the back-end sees extra content as a new request after the stated length.  
 The lab typically involves smuggling via H2 headers (e.g., pseudo-headers, padding, or body framing) to bypass front-end controls and reach back-end endpoints as a privileged user.
 
+# Aha Moment
 
-## Aha Moment
+The breakthrough came when I realized HTTP/2 smuggling isn’t just “HTTP/1.1 with frames” it’s a completely different attack surface because the front-end **rewrites** the protocol during H2 → H1 translation. I kept trying classic CL.TE/TE.CL payloads over HTTP/2 and getting nowhere 400s, timeouts, or nothing. Then it clicked: the front-end was **adding** Transfer-Encoding: chunked during conversion, but the back-end was **ignoring** it and using Content-Length from the original H2 headers (or calculating it wrong). That moment when I crafted a payload with a short Content-Length in H2 pseudo-headers and a long chunked body, and the smuggled request executed on the back-end as admin I literally paused and said “this is insane.” It wasn’t about header precedence anymore; it was about how proxies mangle H2 into H1. Now I see every H2 front-end as a potential smuggling gateway until proven otherwise.
 
-
-The breakthrough came when I realized HTTP/2 smuggling isn’t just “HTTP/1.1 with frames” — it’s a completely different attack surface because the front-end **rewrites** the protocol during H2 → H1 translation.  
-
-
-I kept trying classic CL.TE/TE.CL payloads over HTTP/2 and getting nowhere — 400s, timeouts, or nothing. Then it clicked: the front-end was **adding** Transfer-Encoding: chunked during conversion, but the back-end was **ignoring** it and using Content-Length from the original H2 headers (or calculating it wrong).  
-
-
-That moment when I crafted a payload with a short Content-Length in H2 pseudo-headers + a long chunked body, and the smuggled request executed on the back-end as admin — I literally paused and said “this is insane.” It wasn’t about header precedence anymore; it was about how proxies mangle H2 into H1. Now I see every H2 front-end as a potential smuggling gateway until proven otherwise.
-
-
-## Root Cause
-
+# Root Cause
 
 - Front-end servers (e.g., Nginx, Envoy, Cloudflare) translate HTTP/2 streams to HTTP/1.1 for back-end communication, often injecting or preferring **Transfer-Encoding: chunked**.  
 - Back-end servers may ignore Transfer-Encoding (especially older or strict parsers) and rely solely on **Content-Length** — or miscalculate length from H2 DATA frames.  
@@ -41,26 +26,57 @@ That moment when I crafted a payload with a short Content-Length in H2 pseudo-he
 - Lack of strict H2 → H1 normalization or rejection of ambiguous framing creates the desync opportunity.
 
 
-## Impact
-
+# Impact
 
 - **Bypass front-end security controls** (WAF, rate limiting, IP blocks) → smuggle requests reach back-end as privileged users.  
 - **Response smuggling** → steal responses intended for other users (e.g., admin sessions, API keys).  
 - **Cache poisoning** via H2 paths (especially when front-end caches based on H2 pseudo-headers).  
 - **Privilege escalation** → execute admin-only actions (delete users, access internal endpoints).  
-- **Chain with other vulns** → amplify impact (e.g., smuggle XSS payloads, SSRF, or desync into business logic flaws).  
+- **Chain with other vulns** → amplify impact (e.g., smuggle XSS payloads, SSRF, or desync into business logic flaws).
+    
 In real environments (CDN + app server), this can lead to account takeover, data theft, or full compromise.
 
 # Exploitation
 
-I used POST /x to ensure the front-end would forward a request body during the HTTP/2 to HTTP/1.1 downgrade. By smuggling a GET request to a non-existent /x endpoint, I created a unique signature (404) that allowed me to verify the socket poisoning without interfering with valid application endpoints.
-Initially, the socket poisoning failed because my smuggled HTTP/1.1 prefix lacked a Host header. While the front-end (H2) doesn't require a Host header in the same way, the back-end (H1.1) is RFC-compliant and requires it. This resulted in a 400 Bad Request, causing the server to close the connection before the victim's request could be prepended. I resolved this by crafting a valid HTTP/1.1 request within the H2 body, ensuring the back-end would hold the request in the buffer for the next incoming user.
+After discovering a restricted /admin endpoint returning a 401 Unauthorized, I pivoted my strategy. I wasn't just looking for a simple bypass; I was hunting for a protocol-level disagreement between the front-end and back-end.
+I utilized the HTTP Request Smuggler extension to scan for discrepancies, and it flagged a potential H2.TE vulnerability. To verify this wasn't a false positive, I moved the request into Burp Repeater for manual confirmation.
 
-My smuggling payload looked perfect, but the admin session just wouldn't trigger. After a few failed attempts, I realized I’d made a classic protocol mistake: Initially, I didn't get an obvious error message. I was sending my payload and receiving standard 200 OKs and 404s, but the admin session never appeared. It was a 'silent' failure.
+To 'poison' the stream, I changed the method to POST and injected a chunked end-marker (0) followed by an arbitrary prefix—GINGER—into the HTTP/2 body.
+http
 
-I realized that by omitting the Host header in my smuggled HTTP/1.1 prefix, I hadn't crashed the connection, but I also hadn't created a valid request for the back-end to process. It was essentially 'junk' data sitting in the buffer. The server was ignoring my smuggled instructions and just processing my subsequent requests as if nothing had happened.
+POST / HTTP/2
+Host: LAB-ID.web-security-academy.net
+Transfer-Encoding: chunked
 
-## Recommended Mitigations
+0
+
+GINGER
+<img width="1366" height="611" alt="HOME PAGE" src="https://github.com/user-attachments/assets/9f4e4d1f-ae30-4f8a-8ba1-d4a4708d4d9f" />  
+<img width="1033" height="685" alt="image" src="https://github.com/user-attachments/assets/c2fb9f1d-8183-4767-843a-9994ee381cbd" />
+<img width="1055" height="658" alt="image" src="https://github.com/user-attachments/assets/41b93b29-ed65-4ba9-872c-c87485c82059" />
+<img width="1034" height="679" alt="image" src="https://github.com/user-attachments/assets/fb3c1b6d-5434-426f-898c-1d8b2db05cf6" />
+
+
+After injecting my GINGER prefix, I began a series of follow-up requests to observe the behavior of the back-end. The result was a textbook desync: every second request I sent returned a 404 response.
+This 50/50 split confirmed that my smuggled data was successfully 'stuck' in the back-end's buffer. The server was attempting to process a request starting with my prefix (e.g., GINGERGET /), which predictably failed. This gave me the mathematical certainty I needed, I had full control over the back-end socket.
+Now that the desync was proven, the real challenge began: turning a 'noisy' 404 into a silent session hijack by crafting a perfectly valid, smuggled HTTP/1.1 request.
+<img width="1034" height="679" alt="image" src="https://github.com/user-attachments/assets/8bacc6c6-5d8d-414a-ad9c-6437eb4f7383" />
+<img width="1026" height="681" alt="image" src="https://github.com/user-attachments/assets/dc2e4d8d-c573-446d-96fa-a0b846de79a6" />
+
+To verify the socket poisoning without interfering with legitimate application traffic, I used a custom POST /MOM request. My goal was to ensure the front-end would forward the request body during the HTTP/2 to HTTP/1.1 downgrade. By smuggling a GET request to this non-existent endpoint, I created a unique '404 Signature.' This allowed me to definitively prove the desync was working whenever that specific 404 appeared in my response stream.
+Initially, the poisoning was inconsistent. I realized that my smuggled HTTP/1.1 prefix lacked a mandatory Host header. While HTTP/2 handles hostnames via pseudo-headers (:authority), the back-end (HTTP/1.1) is strictly RFC-compliant. Without a Host header, the back-end was essentially seeing 'malformed' data and resetting the connection before the victim's request could be prepended.My smuggling payload looked perfect, but the admin session just wouldn't trigger. After a few failed attempts, I realized I’d made a classic protocol mistake: Initially, I didn't get an obvious error message. I was sending my payload and receiving standard 200 OKs and 404s, but the admin session never appeared. It was a 'silent' failure.
+<img width="1025" height="690" alt="image" src="https://github.com/user-attachments/assets/630bcde5-c155-48f1-adc5-1bf35143381e" />
+
+To move from a 'Proof of Concept' to a full exploit, I crafted a fully valid, RFC-compliant HTTP/1.1 request (complete with a required Host header) within the H2 body. This 'legal' request forced the back-end to maintain the socket connection and hold my smuggled data in the buffer, ready to be 'sewn' onto the next incoming user's request.
+After several attempts navigating the connection-pool lottery I successfully intercepted a 302 Redirect containing the admin's post-login session cookie.
+<img width="1029" height="685" alt="image" src="https://github.com/user-attachments/assets/9fe9f70e-7861-4909-9f36-767a6336ba83" />
+
+I extracted the admin's session cookie and appended it to a standard HTTP/2 request. Upon receiving a 200 OK, I gained full access to the admin panel. I identified the administrative endpoint for user management (/admin/delete?username=carlos) and forwarded the hijacked session to my browser. By successfully deleting the user 'carlos,' I confirmed a critical H2.TE vulnerability leading to full administrative compromise and unauthorized privilege escalation.
+<img width="1028" height="683" alt="image" src="https://github.com/user-attachments/assets/8445ddcb-3a42-44c1-b9ca-ac62578c4f1b" />
+<img width="1282" height="539" alt="image" src="https://github.com/user-attachments/assets/00cde791-4ca2-49f3-bcdf-d7ec08db3e7f" />
+![Uploading image.png…]()
+
+# Mitigations
 
 
 - **Prefer end-to-end HTTP/2** (disable H2 → H1 downgrade where possible).  
@@ -69,17 +85,3 @@ I realized that by omitting the Host header in my smuggled HTTP/1.1 prefix, I ha
 - **Use HTTP/2-only back-ends** or gateways with smuggling mitigations (e.g., Envoy strict mode, Nginx with `http2` + `proxy_http_version 1.1` + strict checks).  
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
-
-
-## Reflection
-
-
-H2.TE felt like the next level after classic smuggling — same idea, but the protocol translation layer adds a whole new dimension of nastiness. The moment I saw the smuggled request execute over HTTP/2 after failing with H1 payloads was a reminder that modern stacks introduce new attack surfaces even as they try to improve security. It’s one of those vulns that makes you appreciate how fragile the entire HTTP ecosystem still is.
-
-
-**Skills Demonstrated**:
-- Understanding HTTP/2 → HTTP/1.1 translation desync  
-- Effective use of HTTP Smuggler for H2 testing  
-- Crafting H2-specific smuggling payloads  
-- Reasoning about proxy rewriting behavior  
-- Chaining H2 smuggling to privilege bypass
