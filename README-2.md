@@ -55,6 +55,8 @@ GINGER
 <img width="1033" height="685" alt="image" src="https://github.com/user-attachments/assets/c2fb9f1d-8183-4767-843a-9994ee381cbd" />
 <img width="1055" height="658" alt="image" src="https://github.com/user-attachments/assets/41b93b29-ed65-4ba9-872c-c87485c82059" />
 <img width="1034" height="679" alt="image" src="https://github.com/user-attachments/assets/fb3c1b6d-5434-426f-898c-1d8b2db05cf6" />
+<p align="center"></i></p>
+<br><br>
 
 
 After injecting my GINGER prefix, I began a series of follow-up requests to observe the behavior of the back-end. The result was a textbook desync: every second request I sent returned a 404 response.
@@ -62,14 +64,20 @@ This 50/50 split confirmed that my smuggled data was successfully 'stuck' in the
 Now that the desync was proven, the real challenge began: turning a 'noisy' 404 into a silent session hijack by crafting a perfectly valid, smuggled HTTP/1.1 request.
 <img width="1034" height="679" alt="image" src="https://github.com/user-attachments/assets/8bacc6c6-5d8d-414a-ad9c-6437eb4f7383" />
 <img width="1026" height="681" alt="image" src="https://github.com/user-attachments/assets/dc2e4d8d-c573-446d-96fa-a0b846de79a6" />
+<p align="center"></i></p>
+<br><br>
 
 To verify the socket poisoning without interfering with legitimate application traffic, I used a custom POST /MOM request. My goal was to ensure the front-end would forward the request body during the HTTP/2 to HTTP/1.1 downgrade. By smuggling a GET request to this non-existent endpoint, I created a unique '404 Signature.' This allowed me to definitively prove the desync was working whenever that specific 404 appeared in my response stream.
 Initially, the poisoning was inconsistent. I realized that my smuggled HTTP/1.1 prefix lacked a mandatory Host header. While HTTP/2 handles hostnames via pseudo-headers (:authority), the back-end (HTTP/1.1) is strictly RFC-compliant. Without a Host header, the back-end was essentially seeing 'malformed' data and resetting the connection before the victim's request could be prepended.My smuggling payload looked perfect, but the admin session just wouldn't trigger. After a few failed attempts, I realized I’d made a classic protocol mistake: Initially, I didn't get an obvious error message. I was sending my payload and receiving standard 200 OKs and 404s, but the admin session never appeared. It was a 'silent' failure.
 <img width="1025" height="690" alt="image" src="https://github.com/user-attachments/assets/630bcde5-c155-48f1-adc5-1bf35143381e" />
+<p align="center"></i></p>
+<br><br>
 
 To move from a 'Proof of Concept' to a full exploit, I crafted a fully valid, RFC-compliant HTTP/1.1 request (complete with a required Host header) within the H2 body. This 'legal' request forced the back-end to maintain the socket connection and hold my smuggled data in the buffer, ready to be 'sewn' onto the next incoming user's request.
 After several attempts navigating the connection-pool lottery I successfully intercepted a 302 Redirect containing the admin's post-login session cookie.
 <img width="1029" height="685" alt="image" src="https://github.com/user-attachments/assets/9fe9f70e-7861-4909-9f36-767a6336ba83" />
+<p align="center"></i></p>
+<br><br>
 
 I extracted the admin's session cookie and appended it to a standard HTTP/2 request. Upon receiving a 200 OK, I gained full access to the admin panel. I identified the administrative endpoint for user management (/admin/delete?username=carlos) and forwarded the hijacked session to my browser. By successfully deleting the user 'carlos,' I confirmed a critical H2.TE vulnerability leading to full administrative compromise and unauthorized privilege escalation.
 <img width="1028" height="683" alt="image" src="https://github.com/user-attachments/assets/8445ddcb-3a42-44c1-b9ca-ac62578c4f1b" />
@@ -78,8 +86,8 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 <img width="1326" height="576" alt="image" src="https://github.com/user-attachments/assets/1259714c-b4a4-4f3b-a6c9-a88597cd332b" />
 <img width="1285" height="408" alt="image" src="https://github.com/user-attachments/assets/6d1cb3f7-f341-494b-8497-a7a9cc419df5" />
 <img width="1262" height="486" alt="image" src="https://github.com/user-attachments/assets/5a8de84d-b292-4f75-b986-f46f8229bb16" />
-
-
+<p align="center"></i></p>
+<br><br>
 
 # Mitigations
 
@@ -90,6 +98,7 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Use HTTP/2-only back-ends** or gateways with smuggling mitigations (e.g., Envoy strict mode, Nginx with `http2` + `proxy_http_version 1.1` + strict checks).  
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
+
 
 
 
