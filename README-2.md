@@ -105,7 +105,7 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
 
-
+**Happy (ethical) Hacking!**
 
 
 
