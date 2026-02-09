@@ -74,7 +74,11 @@ After several attempts navigating the connection-pool lottery I successfully int
 I extracted the admin's session cookie and appended it to a standard HTTP/2 request. Upon receiving a 200 OK, I gained full access to the admin panel. I identified the administrative endpoint for user management (/admin/delete?username=carlos) and forwarded the hijacked session to my browser. By successfully deleting the user 'carlos,' I confirmed a critical H2.TE vulnerability leading to full administrative compromise and unauthorized privilege escalation.
 <img width="1028" height="683" alt="image" src="https://github.com/user-attachments/assets/8445ddcb-3a42-44c1-b9ca-ac62578c4f1b" />
 <img width="1282" height="539" alt="image" src="https://github.com/user-attachments/assets/00cde791-4ca2-49f3-bcdf-d7ec08db3e7f" />
+<img width="525" height="519" alt="image" src="https://github.com/user-attachments/assets/bd987676-07ce-463d-b8e9-3d8acc7964f5" />
+<img width="1326" height="576" alt="image" src="https://github.com/user-attachments/assets/1259714c-b4a4-4f3b-a6c9-a88597cd332b" />
+<img width="1285" height="408" alt="image" src="https://github.com/user-attachments/assets/6d1cb3f7-f341-494b-8497-a7a9cc419df5" />
 ![Uploading image.png…]()
+
 
 # Mitigations
 
@@ -85,3 +89,4 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Use HTTP/2-only back-ends** or gateways with smuggling mitigations (e.g., Envoy strict mode, Nginx with `http2` + `proxy_http_version 1.1` + strict checks).  
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
+
