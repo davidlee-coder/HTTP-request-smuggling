@@ -50,7 +50,8 @@ Transfer-Encoding: chunked
 
 0
 
-GINGER
+GINGER<p align="center"></i></p>
+<br>
 <img width="1366" height="611" alt="HOME PAGE" src="https://github.com/user-attachments/assets/9f4e4d1f-ae30-4f8a-8ba1-d4a4708d4d9f" />  
 <img width="1033" height="685" alt="image" src="https://github.com/user-attachments/assets/c2fb9f1d-8183-4767-843a-9994ee381cbd" />
 <img width="1055" height="658" alt="image" src="https://github.com/user-attachments/assets/41b93b29-ed65-4ba9-872c-c87485c82059" />
@@ -98,6 +99,7 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Use HTTP/2-only back-ends** or gateways with smuggling mitigations (e.g., Envoy strict mode, Nginx with `http2` + `proxy_http_version 1.1` + strict checks).  
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
+
 
 
 
