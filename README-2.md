@@ -92,3 +92,4 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
 
 
+
