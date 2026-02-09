@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security Research](https://img.shields.io/badge/Security-Research-blue.svg)](https://github.com/yourusername/web-shell-race-condition)
 
-**Level** — Expert  
+**Level** — Practitioner 
 **Category** — HTTP Request Smuggling / HTTP/2  
 **PortSwigger Link** — https://portswigger.net/web-security/request-smuggling/advanced/http2-request-smuggling  
 **Completed** — February 8 2026  
@@ -99,6 +99,7 @@ I extracted the admin's session cookie and appended it to a standard HTTP/2 requ
 - **Use HTTP/2-only back-ends** or gateways with smuggling mitigations (e.g., Envoy strict mode, Nginx with `http2` + `proxy_http_version 1.1` + strict checks).  
 - **Monitor for desync indicators** (unexpected 400/timeout patterns, anomalous response lengths).  
 - **Vendor hardening** — apply latest patches for known H2 smuggling vectors in proxies/CDNs.
+
 
 
 
